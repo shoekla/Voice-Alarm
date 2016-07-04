@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="edu.cmu.pocketsphinx.demo">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/logo"
+        android:label="Voice Alarm">
+        <activity
+            android:name=".PocketSphinxActivity"
+            android:label="Voice Alarm">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.ALL_APPS" />
+
+            </intent-filter>
+        </activity>
+        <activity android:name=".alarms"
+            android:label="alarm"/>
+        <activity android:name=".alarmActivity"
+            android:label="alarmActivity"></activity>
+    </application>
+
+</manifest>
