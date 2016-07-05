@@ -34,7 +34,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
@@ -43,6 +42,7 @@ import android.os.CountDownTimer;
 import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -74,8 +74,8 @@ public class PocketSphinxActivity extends Activity implements
     private static final String MENU_SEARCH = "menu";
 
     /* Keyword we are looking for to activate menu */
-    private static final String KEYPHRASE = "hey alarm";
-
+    private static final String KEYPHRASE = "hey voice alarm";
+    boolean away = false;
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
 
@@ -88,7 +88,7 @@ public class PocketSphinxActivity extends Activity implements
     public void onCreate(Bundle state) {
         super.onCreate(state);
         mediaPlayer = MediaPlayer.create(PocketSphinxActivity.this, R.raw.play);
-
+        mediaPlayer.setLooping(true);
         playSong = new Thread(new Runnable() {
             public void run() {
                mediaPlayer.start();
@@ -105,7 +105,7 @@ public class PocketSphinxActivity extends Activity implements
         setContentView(R.layout.main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         ((TextView) findViewById(R.id.caption_text))
                 .setText("Preparing the recognizer");
 
@@ -121,11 +121,50 @@ public class PocketSphinxActivity extends Activity implements
             public void onTick(long millisUntilFinished) {
                 Calendar c = Calendar.getInstance();
                 //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
+                for (int i = 0 ; i < AlarmData.getTimes().size();i++) {
+                    if (AlarmData.ignore != AlarmData.getTimes().get(i)) {
+                        int h = getHour(AlarmData.getTimes().get(i));
+                        int m = getMin(AlarmData.getTimes().get(i));
+                        if (c.get(Calendar.HOUR) == h && c.get(Calendar.MINUTE) == m) {
+                            if (mediaPlayer.isPlaying() == false) {
+                                mediaPlayer.start();
+                            }
+                        }
+                    }
+                }
+                if (AlarmData.lookFor != 0) {
+                    int h = getHour(AlarmData.lookFor);
+                    int m = getMin(AlarmData.lookFor);
+                    if (c.get(Calendar.HOUR) == h && c.get(Calendar.MINUTE) == m) {
+                        if (mediaPlayer.isPlaying() == false) {
+                            mediaPlayer.start();
+                        }
+                    }
+                }
+                if (AlarmData.goog != -1) {
+                    int m = getHour(AlarmData.goog);
+                    m = m*100;
+                    int s = getMin(AlarmData.goog);
+                    int g = m+s;
+                    int mC = c.get(Calendar.MINUTE);
+                    mC = mC*100;
+                    int sC = c.get(Calendar.SECOND);
+                    int gC = mC+sC;
+                    Toast.makeText(getApplicationContext(), "Goog: "+gC+""+g+"", Toast.LENGTH_SHORT).show();
+                    if (gC-g == 5) {
+                        Toast.makeText(getApplicationContext(), "Reset!", Toast.LENGTH_SHORT).show();
+                        AlarmData.goog = -1;
+                        runRecognizerSetup();
+                        setContentView(R.layout.main);
+                    }
+
+                }
             }
             public void onFinish() {
 
             }
         };
+        newtimer.start();
     }
 
     private void runRecognizerSetup() {
@@ -148,7 +187,7 @@ public class PocketSphinxActivity extends Activity implements
             protected void onPostExecute(Exception result) {
                 if (result != null) {
                     ((TextView) findViewById(R.id.caption_text))
-                            .setText("To start Voice Command say \"Hey Alarm\"");
+                            .setText("To start Voice Command say \"Voice Alarm\"");
                 } else {
                     switchSearch(KWS_SEARCH);
                 }
@@ -156,7 +195,7 @@ public class PocketSphinxActivity extends Activity implements
         }.execute();
     }
     public void onError() {
-     promptSpeechInput();
+
     }
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -193,7 +232,41 @@ public class PocketSphinxActivity extends Activity implements
         recognizer.stop();
         recognizer.cancel();
         recognizer.shutdown();
+
+        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_alarm);
+        TextView alarmTextView = (TextView) findViewById(R.id.textViewAlarm);
+        String sar = "";
+        for (int i =0; i < AlarmData.getTimes().size(); i++) {
+            String messAlarm = getHour(AlarmData.getTimes().get(i)) +": "+getMin(AlarmData.getTimes().get(i));
+            sar = sar+ "Alarm "+(i+1)+": "+messAlarm+"\n";
+        }
+        if (sar.length() <2) {
+            sar = "No Alarms Yet";
+        }
+        alarmTextView.setText(sar);
+        away = true;
+
+    }
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)  {
+        if (Integer.parseInt(android.os.Build.VERSION.SDK) > 5
+                && keyCode == KeyEvent.KEYCODE_BACK
+                && event.getRepeatCount() == 0) {
+            onBackPressed();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        if (away) {
+            away = false;
+            setContentView(R.layout.main);
+            runRecognizerSetup();
+        }
     }
     @Override
     public void onDestroy() {
@@ -206,6 +279,9 @@ public class PocketSphinxActivity extends Activity implements
             mediaPlayer.stop();
         }
     }
+    public void editA (View view) {
+        promptSpeechInput();
+    }
 
     /**
      * In partial result we get quick updates about current hypothesis. In
@@ -216,18 +292,24 @@ public class PocketSphinxActivity extends Activity implements
         int a = t/100;
         return a;
     }
+    public int getMin(int t) {
+        int h = getHour(t);
+        h = h *100;
+        return t-h;
+    }
     @Override
     public void onPartialResult(Hypothesis hypothesis) {
         if (hypothesis == null)
             return;
+
+        String text = hypothesis.getHypstr();
+        Calendar c = Calendar.getInstance();
         recognizer.stop();
         recognizer.cancel();
         recognizer.shutdown();
-        String text = hypothesis.getHypstr();
-        Calendar c = Calendar.getInstance();
         //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
         if (text.equals(KEYPHRASE)) {
-            for (int i = 0; i < AlarmData.getTimes().size(); i++) {
+          /*  for (int i = 0; i < AlarmData.getTimes().size(); i++) {
                 if (getHour(AlarmData.getTimes().get(i)) == c.get(Calendar.HOUR)) {
                     if (AlarmData.getTimes().get(i) != AlarmData.ignore) {
                         if (mediaPlayer.isPlaying())
@@ -241,9 +323,16 @@ public class PocketSphinxActivity extends Activity implements
                     mediaPlayer.pause();
                 promptSpeechInput();
             }
+            */
+            recognizer.stop();
+            recognizer.cancel();
+            recognizer.shutdown();
+            if (mediaPlayer.isPlaying())
+                mediaPlayer.pause();
 
+            AlarmData.addGoog(c.get(Calendar.MINUTE),c.get(Calendar.SECOND));
+            promptSpeechInput();
         }
-        runRecognizerSetup();
 
 
         /*
@@ -258,6 +347,9 @@ public class PocketSphinxActivity extends Activity implements
             */
     }
     private void promptSpeechInput() {
+        recognizer.stop();
+        recognizer.cancel();
+        recognizer.shutdown();
         String speech_prompt = "Enter Voice Command";
         final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -278,10 +370,11 @@ public class PocketSphinxActivity extends Activity implements
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
+        recognizer.stop();
+        recognizer.cancel();
+        recognizer.shutdown();
         String res = "";
 
-        super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
             case REQ_CODE_SPEECH_INPUT: {
@@ -296,12 +389,31 @@ public class PocketSphinxActivity extends Activity implements
 
 
         }
+        try {
+            ((TextView) findViewById(R.id.result_text)).setText("Latest Command: " + res);
+        }
+        catch (Exception e) {
 
-        ((TextView) findViewById(R.id.result_text)).setText("Latest Command: "+res);
+        }
         res = res.toLowerCase();
-        if (res.contains("play")) {
-            mediaPlayer.start();
+        if (res.contains(":")) {
+            String arr[] = res.split(" ");
+            String ares = "";
+            for (int i = 0; i < arr.length; i++) {
+                if (arr[i].contains(":")) {
+                    ares = arr[i];
+                }
+            }
+            int hour = Integer.parseInt(ares.substring(0,ares.indexOf(":")));
+            int min = Integer.parseInt(ares.substring(ares.indexOf(":")+1));
+            AlarmData.addTime(hour,min);
+            Toast.makeText(this, "Added Alarm for "+ares+"", Toast.LENGTH_SHORT).show();
+            //mediaPlayer.start();
 
+        }
+        if (res.contains("play")) {
+            if (mediaPlayer.isPlaying() == false)
+            mediaPlayer.start();
         }
         runRecognizerSetup();
 
