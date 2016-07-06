@@ -33,7 +33,9 @@ package edu.cmu.pocketsphinx.demo;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
@@ -84,8 +86,22 @@ public class PocketSphinxActivity extends Activity implements
     CountDownTimer newtimer;
     MediaPlayer mediaPlayer;
     Thread playSong;
+    SharedPreferences sharedPref;
     @Override
     public void onCreate(Bundle state) {
+        sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        Calendar ams = Calendar.getInstance();
+        System.out.println("Calendar: "+ams.get(Calendar.HOUR_OF_DAY));
+        if (sharedPref != null) {
+            String alarmSave = sharedPref.getString("alarms", "");
+            if (!alarmSave.equals("") && AlarmData.times.size()==0) {
+                System.out.println("AlarmSave: "+alarmSave);
+                String arrs[] = alarmSave.split(",");
+                for (int i = 0; i < arrs.length; i++) {
+                    AlarmData.times.add(Integer.parseInt(arrs[i]));
+                }
+            }
+        }
         super.onCreate(state);
         mediaPlayer = MediaPlayer.create(PocketSphinxActivity.this, R.raw.play);
         mediaPlayer.setLooping(true);
@@ -120,29 +136,37 @@ public class PocketSphinxActivity extends Activity implements
 
             public void onTick(long millisUntilFinished) {
                 Calendar c = Calendar.getInstance();
+                //System.out.println("Calendar Ignore: "+AlarmData.ignore);
                 //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
-                for (int i = 0 ; i < AlarmData.getTimes().size();i++) {
-                    if (AlarmData.ignore != AlarmData.getTimes().get(i)) {
-                        int h = getHour(AlarmData.getTimes().get(i));
-                        int m = getMin(AlarmData.getTimes().get(i));
-                        if (c.get(Calendar.HOUR) == h && c.get(Calendar.MINUTE) == m) {
-                            if (mediaPlayer.isPlaying() == false) {
-                                mediaPlayer.start();
+                if (c.get(Calendar.HOUR_OF_DAY) == getHour(AlarmData.ignore) && c.get(Calendar.MINUTE) == getMin(AlarmData.ignore)) {
+                        mediaPlayer.pause();
+                    System.out.println("ignore");
+                } else {
+                    System.out.println("Not ignore");
+                    for (int i = 0; i < AlarmData.getTimes().size(); i++) {
+                        if (AlarmData.ignore != AlarmData.getTimes().get(i)) {
+                            int h = getHour(AlarmData.getTimes().get(i));
+                            int m = getMin(AlarmData.getTimes().get(i));
+                            if (c.get(Calendar.HOUR_OF_DAY) == h && c.get(Calendar.MINUTE) == m) {
+                                if (mediaPlayer.isPlaying() == false) {
+                                    mediaPlayer.start();
+                                }
                             }
                         }
                     }
-                }
-                if (AlarmData.lookFor != 0) {
-                    int h = getHour(AlarmData.lookFor);
-                    int m = getMin(AlarmData.lookFor);
-                    if (c.get(Calendar.HOUR) == h && c.get(Calendar.MINUTE) == m) {
-                        if (mediaPlayer.isPlaying() == false) {
-                            mediaPlayer.start();
+                    if (AlarmData.lookFor != 0) {
+                        System.out.print("Inside 1");
+                            int h = getHour(AlarmData.lookFor);
+                            int m = getMin(AlarmData.lookFor);
+                            if (c.get(Calendar.HOUR_OF_DAY) == h && c.get(Calendar.MINUTE) == m) {
+                                System.out.print("Inside 2");
+                                    mediaPlayer.start();
+
+
                         }
                     }
-                }
-                if (AlarmData.goog != -1) {
-                    int m = getHour(AlarmData.goog);
+                    if (AlarmData.goog != -1) {
+                /*    int m = getHour(AlarmData.goog);
                     m = m*100;
                     int s = getMin(AlarmData.goog);
                     int g = m+s;
@@ -153,11 +177,17 @@ public class PocketSphinxActivity extends Activity implements
                     Toast.makeText(getApplicationContext(), "Goog: "+gC+""+g+"", Toast.LENGTH_SHORT).show();
                     if (gC-g == 5) {
                         Toast.makeText(getApplicationContext(), "Reset!", Toast.LENGTH_SHORT).show();
-                        AlarmData.goog = -1;
-                        runRecognizerSetup();
-                        setContentView(R.layout.main);
+                        Intent mStartActivity = new Intent(getApplicationContext(), PocketSphinxActivity.class);
+                        int mPendingIntentId = 123456;
+                        PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                        AlarmManager mgr = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                        System.exit(0);
                     }
 
+*/
+
+                    }
                 }
             }
             public void onFinish() {
@@ -211,28 +241,13 @@ public class PocketSphinxActivity extends Activity implements
         }
     }
     public void goToAlarms(View view) {
-       /* AlarmData.addTime(11,30);
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        String message = "";
-        if (AlarmData.getTimes().size() != 0) {
-            for (int i = 0; i < AlarmData.getTimes().size(); i++) {
-                message = message + AlarmData.getTimes().get(i) + "\n";
-            }
 
-
-
+        if (recognizer != null) {
+            recognizer.cancel();
+            recognizer.shutdown();
+            newtimer.cancel();
+            mediaPlayer.stop();
         }
-        else {
-            message = "No Alarm to Show";
-        }
-
-        alertDialogBuilder.setMessage(message);
-        alertDialogBuilder.show();
-        */
-        recognizer.stop();
-        recognizer.cancel();
-        recognizer.shutdown();
-
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_alarm);
         TextView alarmTextView = (TextView) findViewById(R.id.textViewAlarm);
@@ -264,12 +279,35 @@ public class PocketSphinxActivity extends Activity implements
     public void onBackPressed() {
         if (away) {
             away = false;
-            setContentView(R.layout.main);
-            runRecognizerSetup();
+            Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+            startActivity(b);
+        }
+        else {
+            onDestroy();
         }
     }
     @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        String alarmSave = "";
+        for (int i = 0; i < AlarmData.times.size(); i++) {
+            alarmSave = alarmSave+AlarmData.times.get(i)+",";
+        }
+        savedInstanceState.putString("alarms",alarmSave);
+        super.onSaveInstanceState(savedInstanceState);
+
+    }
+
+    @Override
     public void onDestroy() {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        String alarmSave = "";
+        for (int i = 0; i < AlarmData.getTimes().size(); i++) {
+            alarmSave = alarmSave+AlarmData.getTimes().get(i)+",";
+        }
+        editor.putString("alarms", alarmSave);
+        editor.commit();
+        super.onDestroy();
         super.onDestroy();
 
         if (recognizer != null) {
@@ -279,8 +317,26 @@ public class PocketSphinxActivity extends Activity implements
             mediaPlayer.stop();
         }
     }
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        String alarmSave = savedInstanceState.getString("alarms");
+        if (!alarmSave.equals("") && AlarmData.times.size()==0) {
+            System.out.println("AlarmSave: "+alarmSave);
+            String arrs[] = alarmSave.split(",");
+            for (int i = 0; i < arrs.length; i++) {
+                AlarmData.times.add(Integer.parseInt(arrs[i]));
+            }
+        }
+    }
     public void editA (View view) {
+        if (recognizer != null) {
+            recognizer.cancel();
+            recognizer.shutdown();
+            newtimer.cancel();
+            mediaPlayer.stop();
+        }
         promptSpeechInput();
+
     }
 
     /**
@@ -304,52 +360,56 @@ public class PocketSphinxActivity extends Activity implements
 
         String text = hypothesis.getHypstr();
         Calendar c = Calendar.getInstance();
-        recognizer.stop();
-        recognizer.cancel();
-        recognizer.shutdown();
+        if (recognizer != null) {
+            recognizer.cancel();
+            recognizer.shutdown();
+        }
         //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
         if (text.equals(KEYPHRASE)) {
-          /*  for (int i = 0; i < AlarmData.getTimes().size(); i++) {
-                if (getHour(AlarmData.getTimes().get(i)) == c.get(Calendar.HOUR)) {
-                    if (AlarmData.getTimes().get(i) != AlarmData.ignore) {
-                        if (mediaPlayer.isPlaying())
+            int check = 0;
+
+            //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
+            for (int i = 0 ; i < AlarmData.getTimes().size();i++) {
+                if (AlarmData.ignore != AlarmData.getTimes().get(i)) {
+                    int h = getHour(AlarmData.getTimes().get(i));
+                    int m = getMin(AlarmData.getTimes().get(i));
+                    if (c.get(Calendar.HOUR_OF_DAY) == h && c.get(Calendar.MINUTE) == m) {
+
                             mediaPlayer.pause();
-                        promptSpeechInput();
+                            promptSpeechInput();
+                            check = 1;
+
                     }
                 }
             }
-            if (getHour(AlarmData.lookFor) == c.get(Calendar.HOUR) && AlarmData.lookFor != 0) {
-                if (mediaPlayer.isPlaying())
-                    mediaPlayer.pause();
-                promptSpeechInput();
-            }
-            */
-            recognizer.stop();
-            recognizer.cancel();
-            recognizer.shutdown();
-            if (mediaPlayer.isPlaying())
-                mediaPlayer.pause();
+            if (AlarmData.lookFor != 0) {
+                if (AlarmData.lookFor != AlarmData.ignore) {
+                    int h = getHour(AlarmData.lookFor);
+                    int m = getMin(AlarmData.lookFor);
+                    if (c.get(Calendar.HOUR_OF_DAY) == h && c.get(Calendar.MINUTE) == m) {
 
-            AlarmData.addGoog(c.get(Calendar.MINUTE),c.get(Calendar.SECOND));
-            promptSpeechInput();
+                            mediaPlayer.pause();
+                            promptSpeechInput();
+                            check = 1;
+
+
+                    }
+                }
+            }
+            if (check == 0){
+                Toast.makeText(this, "You can only say voice commands if, an alarm is ringing, try adding an alarm!", Toast.LENGTH_SHORT).show();
+            }
         }
 
 
-        /*
-        else if (text.equals(DIGITS_SEARCH))
-            switchSearch(DIGITS_SEARCH);
-        else if (text.equals(PHONE_SEARCH))
-            switchSearch(PHONE_SEARCH);
-        else if (text.equals(FORECAST_SEARCH))
-            switchSearch(FORECAST_SEARCH);
-        else
-            ((TextView) findViewById(R.id.result_text)).setText(text);
-            */
     }
     private void promptSpeechInput() {
-        recognizer.stop();
-        recognizer.cancel();
-        recognizer.shutdown();
+        if (recognizer != null) {
+            recognizer.cancel();
+            recognizer.shutdown();
+            newtimer.cancel();
+            mediaPlayer.stop();
+        }
         String speech_prompt = "Enter Voice Command";
         final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -370,9 +430,12 @@ public class PocketSphinxActivity extends Activity implements
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        recognizer.stop();
-        recognizer.cancel();
-        recognizer.shutdown();
+        if (recognizer != null) {
+            recognizer.cancel();
+            recognizer.shutdown();
+            newtimer.cancel();
+            mediaPlayer.stop();
+        }
         String res = "";
 
 
@@ -391,31 +454,139 @@ public class PocketSphinxActivity extends Activity implements
         }
         try {
             ((TextView) findViewById(R.id.result_text)).setText("Latest Command: " + res);
+            Toast.makeText(this, "Latest Command: " + res, Toast.LENGTH_SHORT).show();
         }
         catch (Exception e) {
 
         }
         res = res.toLowerCase();
         if (res.contains(":")) {
+            if (res.contains("delete")) {
+                String arr[] = res.split(" ");
+                String ares = "";
+                for (int i = 0; i < arr.length; i++) {
+                    if (arr[i].contains(":")) {
+                        ares = arr[i];
+                    }
+                }
+                int hour = Integer.parseInt(ares.substring(0, ares.indexOf(":")));
+                if (res.contains("p.m.")) {
+                    hour = hour+12;
+                    if (hour >= 24) {
+                        hour = hour - 24;
+                    }
+                }
+                int min = Integer.parseInt(ares.substring(ares.indexOf(":") + 1));
+                hour = hour * 100;
+                int alarmTime = hour+min;
+                AlarmData.times.remove(AlarmData.times.indexOf(alarmTime));
+                Toast.makeText(this, "Deleted Alarm for " + ares + "", Toast.LENGTH_SHORT).show();
+                Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+                startActivity(b);
+
+            }
+            else {
+                String arr[] = res.split(" ");
+                String ares = "";
+                String messA = "";
+                for (int i = 0; i < arr.length; i++) {
+                    if (arr[i].contains(":")) {
+                        ares = arr[i];
+                        int hour = Integer.parseInt(ares.substring(0, ares.indexOf(":")));
+                        if (res.contains("p.m.")) {
+                            hour = hour+12;
+                            if (hour >= 24) {
+                                hour = hour - 24;
+                            }
+                        }
+                        int min = Integer.parseInt(ares.substring(ares.indexOf(":") + 1));
+                        AlarmData.addTime(hour, min);
+                        messA = messA + " " + ares + "";
+                    }
+                }
+                Toast.makeText(this, "Added Alarm for " + messA + "", Toast.LENGTH_SHORT).show();
+                Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+                startActivity(b);
+                //mediaPlayer.start();
+            }
+        }else if (res.contains("minute")) {
+            int m = -1;
             String arr[] = res.split(" ");
-            String ares = "";
             for (int i = 0; i < arr.length; i++) {
-                if (arr[i].contains(":")) {
-                    ares = arr[i];
+                try {
+                    m = Integer.parseInt(arr[i]);
+                }
+                catch (Exception e) {
+
                 }
             }
-            int hour = Integer.parseInt(ares.substring(0,ares.indexOf(":")));
-            int min = Integer.parseInt(ares.substring(ares.indexOf(":")+1));
-            AlarmData.addTime(hour,min);
-            Toast.makeText(this, "Added Alarm for "+ares+"", Toast.LENGTH_SHORT).show();
-            //mediaPlayer.start();
+            if (res.contains("one")) {
+                m = 1;
+            }
+            if (m != -1) {
+                Calendar c = Calendar.getInstance();
+                //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
+
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+                int min = c.get(Calendar.MINUTE);
+                hour = hour * 100;
+                int alarmTime = hour+min;
+                AlarmData.ignore = alarmTime;
+                hour = c.get(Calendar.HOUR_OF_DAY);
+                System.out.println("Ignore: "+AlarmData.ignore);
+                m = min+m;
+                if (m >= 60) {
+                    m = m-60;
+                    hour = hour + 1;
+                }
+                if (hour >= 24) {
+                    hour = hour - 24;
+                }
+                hour = hour*100;
+                alarmTime = hour+m;
+                AlarmData.lookFor = alarmTime;
+
+                System.out.println("Look For: "+AlarmData.lookFor);
+
+                Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+                startActivity(b);
+            }
 
         }
-        if (res.contains("play")) {
-            if (mediaPlayer.isPlaying() == false)
-            mediaPlayer.start();
+        else if (res.contains("hour")) {
+            int m = -1;
+            String arr[] = res.split(" ");
+            for (int i = 0; i < arr.length; i++) {
+                try {
+                    m = Integer.parseInt(arr[i]);
+                }
+                catch (Exception e) {
+
+                }
+            }
+            Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int min = c.get(Calendar.MINUTE);
+            hour = hour * 100;
+            int alarmTime = hour+min;
+            AlarmData.ignore = alarmTime;
+            hour = c.get(Calendar.HOUR_OF_DAY);
+            hour = hour+m;
+            if (hour >= 24) {
+                hour= hour-24;
+                hour = hour + 1;
+            }
+            hour = hour*100;
+            alarmTime = hour+min;
+            AlarmData.lookFor = alarmTime;
+            System.out.println("Look For: "+AlarmData.lookFor);
+
+            Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+            startActivity(b);
+
         }
-        runRecognizerSetup();
+        Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
+        startActivity(b);
 
     }
     /**
