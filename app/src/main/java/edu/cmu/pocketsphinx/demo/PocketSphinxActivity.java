@@ -520,8 +520,15 @@ public class PocketSphinxActivity extends Activity implements
 
                 }
             }
-            if (res.contains("one")) {
-                m = 1;
+            if (m == -1) {
+                for (int i = 0; i < arr.length; i++) {
+                    try {
+                        m = Integer.parseInt(AlarmData.replaceNumbers(arr[i]));
+                    }
+                    catch (Exception e) {
+
+                    }
+                }
             }
             if (m != -1) {
                 Calendar c = Calendar.getInstance();
@@ -562,6 +569,18 @@ public class PocketSphinxActivity extends Activity implements
                 }
                 catch (Exception e) {
 
+                }
+            }
+            if (m == -1) {
+                if (m == -1) {
+                    for (int i = 0; i < arr.length; i++) {
+                        try {
+                            m = Integer.parseInt(AlarmData.replaceNumbers(arr[i]));
+                        }
+                        catch (Exception e) {
+
+                        }
+                    }
                 }
             }
             Calendar c = Calendar.getInstance();
