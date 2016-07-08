@@ -104,6 +104,7 @@ public class PocketSphinxActivity extends Activity implements
         }
         super.onCreate(state);
         mediaPlayer = MediaPlayer.create(PocketSphinxActivity.this, R.raw.play);
+
         mediaPlayer.setLooping(true);
         playSong = new Thread(new Runnable() {
             public void run() {
@@ -139,10 +140,10 @@ public class PocketSphinxActivity extends Activity implements
                 //System.out.println("Calendar Ignore: "+AlarmData.ignore);
                 //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
                 if (c.get(Calendar.HOUR_OF_DAY) == getHour(AlarmData.ignore) && c.get(Calendar.MINUTE) == getMin(AlarmData.ignore)) {
-                        mediaPlayer.pause();
-                    System.out.println("ignore");
+                    if (mediaPlayer.isPlaying())
+                        mediaPlayer.stop();
+
                 } else {
-                    System.out.println("Not ignore");
                     for (int i = 0; i < AlarmData.getTimes().size(); i++) {
                         if (AlarmData.ignore != AlarmData.getTimes().get(i)) {
                             int h = getHour(AlarmData.getTimes().get(i));
@@ -154,13 +155,17 @@ public class PocketSphinxActivity extends Activity implements
                             }
                         }
                     }
+                    System.out.println("Inside: "+AlarmData.lookFor);
                     if (AlarmData.lookFor != 0) {
                         System.out.print("Inside 1");
                             int h = getHour(AlarmData.lookFor);
                             int m = getMin(AlarmData.lookFor);
-                            if (c.get(Calendar.HOUR_OF_DAY) == h && c.get(Calendar.MINUTE) == m) {
-                                System.out.print("Inside 2");
+                        System.out.println("Inside H: "+h+", "+c.get(Calendar.HOUR_OF_DAY) );
+                        System.out.println("Inside M: "+m+", "+c.get(Calendar.MINUTE) );
+                            if ((int)c.get(Calendar.HOUR_OF_DAY) == h && (int)c.get(Calendar.MINUTE) == m) {
+
                                     mediaPlayer.start();
+
 
 
                         }
@@ -300,6 +305,14 @@ public class PocketSphinxActivity extends Activity implements
 
     @Override
     public void onDestroy() {
+
+        if (recognizer != null) {
+            recognizer.cancel();
+            recognizer.shutdown();
+            newtimer.cancel();
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
         SharedPreferences.Editor editor = sharedPref.edit();
         String alarmSave = "";
         for (int i = 0; i < AlarmData.getTimes().size(); i++) {
@@ -308,14 +321,7 @@ public class PocketSphinxActivity extends Activity implements
         editor.putString("alarms", alarmSave);
         editor.commit();
         super.onDestroy();
-        super.onDestroy();
 
-        if (recognizer != null) {
-            recognizer.cancel();
-            recognizer.shutdown();
-            newtimer.cancel();
-            mediaPlayer.stop();
-        }
     }
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
@@ -540,8 +546,9 @@ public class PocketSphinxActivity extends Activity implements
                 int alarmTime = hour+min;
                 AlarmData.ignore = alarmTime;
                 hour = c.get(Calendar.HOUR_OF_DAY);
+                min = c.get(Calendar.MINUTE);
                 System.out.println("Ignore: "+AlarmData.ignore);
-                m = min+m;
+                m = min + m;
                 if (m >= 60) {
                     m = m-60;
                     hour = hour + 1;
@@ -549,9 +556,9 @@ public class PocketSphinxActivity extends Activity implements
                 if (hour >= 24) {
                     hour = hour - 24;
                 }
+                AlarmData.addTime(hour,m);
                 hour = hour*100;
-                alarmTime = hour+m;
-                AlarmData.lookFor = alarmTime;
+                AlarmData.lookFor = hour+m;
 
                 System.out.println("Look For: "+AlarmData.lookFor);
 
