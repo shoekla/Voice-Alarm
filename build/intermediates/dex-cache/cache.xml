@@ -1,2 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
+
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.0.0/jars/libs/internal_impl-24.0.0.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="fcaf463e10e69c1923ccf1edeba3b4196d239e00">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/internal_impl-24.0.0_be0cf1ef0027f5566cf7814c823fe2d9a4b777b8/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/libs/pocketsphinx-android-5prealpha-nolib.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="51b67b6ebc00a793c7b68da96e83e590c5001350">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/2/pocketsphinx-android-5prealpha-nolib_e8f01bbb17011792a910527795f66a7797610d75/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="2f7e6e2dad1bccaf68a8820820adc6c0d5b96d37">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-support-v4-24.0.0_d42294058a9a7754d978b3a5be9d60f2b42b4c4d/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="765ab6b13f7b539a53027d9c04810c3dc51a1d89">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_3d290d452cfabadcead7db8fdb9b1a92e42db34a/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="e70f608219ed6b974644c333249ab2bb7b71de98">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-animated-vector-drawable-24.0.0_530f5c2517f0f9390229382b5498a6e88f612a43/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="3bd97cfefd783e9de1dd1c30574a6adb44b4409b">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-support-vector-drawable-24.0.0_c798891285827248a00a2ab22b0e4fcf5f9b2c72/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/incremental-runtime-classes/debug/instant-run.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="fb290fd2112f4393a205fa951c93ee1a82369acf">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_03e1000f54bd0461cdf5d6ca1c47ba11adbc343b/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/.gradle/caches/modules-2/files-2.1/com.android.support/support-annotations/24.0.0/2943c74db6d4346ab8c6531adac91fa05c137c40/support-annotations-24.0.0.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="2943c74db6d4346ab8c6531adac91fa05c137c40">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/support-annotations-24.0.0_9cd6018576daa5ca74b2840255efcc74977dac82/classes.dex" />
+    </item>
+    <item
+        jar="/Users/abirshukla/Voice-Alarm/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        revision="24.0.0"
+        sha1="0874286cc2fd88d54fdf130e9d5372730da6de97">
+        <dex dex="/Users/abirshukla/Voice-Alarm/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-appcompat-v7-24.0.0_7c6bc3bad42fcf91b4725fd274af1b7c3033b008/classes.dex" />
+    </item>
+
+</items>

@@ -149,27 +149,17 @@ public class PocketSphinxActivity extends Activity implements
                             int h = getHour(AlarmData.getTimes().get(i));
                             int m = getMin(AlarmData.getTimes().get(i));
                             if (c.get(Calendar.HOUR_OF_DAY) == h && c.get(Calendar.MINUTE) == m) {
+
                                 if (mediaPlayer.isPlaying() == false) {
                                     mediaPlayer.start();
+                                }
+                                if (h == getHour(AlarmData.lookFor) && m == getMin(AlarmData.lookFor)) {
+                                     AlarmData.times.remove(i);
                                 }
                             }
                         }
                     }
-                    System.out.println("Inside: "+AlarmData.lookFor);
-                    if (AlarmData.lookFor != 0) {
-                        System.out.print("Inside 1");
-                            int h = getHour(AlarmData.lookFor);
-                            int m = getMin(AlarmData.lookFor);
-                        System.out.println("Inside H: "+h+", "+c.get(Calendar.HOUR_OF_DAY) );
-                        System.out.println("Inside M: "+m+", "+c.get(Calendar.MINUTE) );
-                            if ((int)c.get(Calendar.HOUR_OF_DAY) == h && (int)c.get(Calendar.MINUTE) == m) {
 
-                                    mediaPlayer.start();
-
-
-
-                        }
-                    }
                     if (AlarmData.goog != -1) {
                 /*    int m = getHour(AlarmData.goog);
                     m = m*100;
@@ -222,7 +212,7 @@ public class PocketSphinxActivity extends Activity implements
             protected void onPostExecute(Exception result) {
                 if (result != null) {
                     ((TextView) findViewById(R.id.caption_text))
-                            .setText("To start Voice Command say \"Voice Alarm\"");
+                            .setText("To start Voice Command say \"Hey Voice Alarm\"");
                 } else {
                     switchSearch(KWS_SEARCH);
                 }
@@ -402,6 +392,12 @@ public class PocketSphinxActivity extends Activity implements
                     }
                 }
             }
+            if (AlarmData.lookFor != 0) {
+                if (mediaPlayer.isPlaying())
+                    mediaPlayer.pause();
+                promptSpeechInput();
+                check = 1;
+            }
             if (check == 0){
                 Toast.makeText(this, "You can only say voice commands if, an alarm is ringing, try adding an alarm!", Toast.LENGTH_SHORT).show();
             }
@@ -573,48 +569,57 @@ public class PocketSphinxActivity extends Activity implements
             for (int i = 0; i < arr.length; i++) {
                 try {
                     m = Integer.parseInt(arr[i]);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
 
                 }
             }
             if (m == -1) {
-                if (m == -1) {
-                    for (int i = 0; i < arr.length; i++) {
-                        try {
-                            m = Integer.parseInt(AlarmData.replaceNumbers(arr[i]));
-                        }
-                        catch (Exception e) {
+                for (int i = 0; i < arr.length; i++) {
+                    try {
+                        m = Integer.parseInt(AlarmData.replaceNumbers(arr[i]));
+                    } catch (Exception e) {
 
-                        }
                     }
                 }
             }
-            Calendar c = Calendar.getInstance();
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            int min = c.get(Calendar.MINUTE);
-            hour = hour * 100;
-            int alarmTime = hour+min;
-            AlarmData.ignore = alarmTime;
-            hour = c.get(Calendar.HOUR_OF_DAY);
-            hour = hour+m;
-            if (hour >= 24) {
-                hour= hour-24;
-                hour = hour + 1;
-            }
-            hour = hour*100;
-            alarmTime = hour+min;
-            AlarmData.lookFor = alarmTime;
-            System.out.println("Look For: "+AlarmData.lookFor);
+            if (m != -1) {
+                Calendar c = Calendar.getInstance();
+                //textView.setText(c.get(Calendar.HOUR)+":"+c.get(Calendar.MINUTE)+":"+c.get(Calendar.SECOND));
 
-            Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
-            startActivity(b);
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+                int min = c.get(Calendar.MINUTE);
+                hour = hour * 100;
+                int alarmTime = hour + min;
+                AlarmData.ignore = alarmTime;
+                hour = c.get(Calendar.HOUR_OF_DAY);
+                min = c.get(Calendar.MINUTE);
+                System.out.println("Ignore: " + AlarmData.ignore);
+                hour = hour+m;
+                if (hour >= 24) {
+                    hour = hour - 24;
+                }
+                AlarmData.addTime(hour, min);
+                hour = hour * 100;
+                AlarmData.lookFor = hour + min;
+
+                System.out.println("Look For: " + AlarmData.lookFor);
+
+                Intent b = new Intent(getApplicationContext(), PocketSphinxActivity.class);
+                startActivity(b);
+            }
+        }
+        else if (res.contains("awake") || res.contains("i am up")) {
+
+            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+            homeIntent.addCategory( Intent.CATEGORY_HOME );
+            homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(homeIntent);
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(1);
+            onDestroy();
 
         }
-        Intent b = new Intent(getApplicationContext(),PocketSphinxActivity.class);
-        startActivity(b);
-
-    }
+        }
     /**
      * This callback is called when we stop the recognizer.
      */
